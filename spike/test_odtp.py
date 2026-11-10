@@ -123,6 +123,19 @@ def test_parse_message_text_group_destination():
     assert message.destination_id == 91
 
 
+def test_parse_message_text_handles_undocumented_option_seen_in_the_wild():
+    """Master 2141 sent a private message with option 0x40, not 0x00.
+
+    Observed 2026-11-10 from DMR ID 214999 to 2140410. The spec documents only
+    0 (private) and 128 (group); real traffic uses 0x40 for private too, so
+    classification must key on the 0x80 bit alone.
+    """
+    message = parse_message_text(_text_payload(214999, 2140410, 0x40, "EA7KLK-0 hi"))
+    assert message.option == 0x40
+    assert message.is_group is False
+    assert message.text == "EA7KLK-0 hi"
+
+
 def test_parse_message_text_preserves_non_ascii():
     message = parse_message_text(_text_payload(1, 2, 0, "Ñandú ✓"))
     assert message.text == "Ñandú ✓"
