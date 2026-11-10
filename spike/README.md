@@ -1,5 +1,12 @@
 # ODTP receive spike
 
+> **This is a spike, not production software.** It exists to prove one thing:
+> that a plain UDP client can hold a BrandMeister terminal identity for a DMR ID
+> and receive SMS without radio hardware. It is a local Python script with no
+> packaging, no container image, no deployment manifest, and no test against any
+> ID other than `2140410`. Do not build on its interfaces as if they were stable,
+> and do not deploy it.
+
 A receive-only spike proving that a plain UDP client can act as a BrandMeister
 terminal for a single DMR ID, without any RF hardware, hotspot, or codec.
 
@@ -115,7 +122,7 @@ Exit codes: `0` success, `1` missing password, `2` never authenticated.
 cd spike && ../.venv/bin/python -m pytest -q
 ```
 
-31 tests, no network required.
+43 tests, no network required.
 
 `test_odtp.py` covers header encoding, the keep-alive payload, the digest,
 UTF-16LE decoding for private and group destinations, the observed `0x40`
@@ -128,7 +135,12 @@ sockets: exit-on-message returns promptly instead of waiting out the window, the
 loop keeps listening without the flag, a master that never confirms yields exit
 2, and injected malformed frames are reported without crashing.
 
-## What this proves for the real service
+`test_report.py` covers the receipt metadata block: text presence, identity and
+route fields, option rendering for the observed `0x40`, group classification via
+the `0x80` bit, header and length fields, payload hex, relative timing, the
+unauthenticated case, and non-ASCII text.
+
+## What the spike suggests about a real service
 
 - One process can hold many connections: one UDP socket per DMR ID with a
   5-second keep-alive, not a process or thread per user.
